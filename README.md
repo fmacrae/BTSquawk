@@ -18,10 +18,13 @@ Install instructions:
 Full Buster Raspian install
 
 sudo apt-get update
+
 sudo apt-get upgrade
+
 sudo apt-get dist-upgrade
 
 sudo apt-get install python3-dbus
+
 sudo pip3 install evdev
 
 sudo service bluetooth stop
@@ -29,13 +32,17 @@ sudo service bluetooth stop
 modify the /lib/systemd/system/bluetooth.service file. You will need to change the Service line from:
 
 ExecStart=/usr/lib/bluetooth/bluetoothd
-to
+
+to:
+
 ExecStart=/usr/lib/bluetooth/bluetoothd -P input
 
 sudo cp org.yaptb.btkkbservice.conf /etc/dbus-1/system.d
 
 sudo service bluetooth stop
+
 sudo /usr/lib/bluetooth/bluetoothd -P input &
+
 sudo python3 btk_server.py
 
 on seperate terminal:
