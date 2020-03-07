@@ -46,6 +46,8 @@ sudo vi /etc/bluetooth/main.conf
 
 Class = 0x002540
 
+If you want it to emulate another device check this for codes:  http://domoticx.com/bluetooth-class-of-device-lijst-cod/
+
 #now copy this file from the repo to to system.d
 
 sudo cp org.yaptb.btkkbservice.conf /etc/dbus-1/system.d
