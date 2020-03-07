@@ -37,7 +37,27 @@ to:
 
 ExecStart=/usr/lib/bluetooth/bluetoothd -P input
 
+
+Change the class of the device to a bluetooth keyboard by modifying main.conf:
+
+sudo vi /etc/bluetooth/main.conf 
+
+#add this line in or ammend the Class =  to this if it's already there:
+
+Class = 0x002540
+
+#now copy this file from the repo to to system.d
+
 sudo cp org.yaptb.btkkbservice.conf /etc/dbus-1/system.d
+
+
+
+#bounce your pi to make all the changes apply
+sudo reboot now
+
+
+#once it's back up run these three commands on a terminal
+
 
 sudo service bluetooth stop
 
@@ -45,12 +65,12 @@ sudo /usr/lib/bluetooth/bluetoothd -P input &
 
 sudo python3 btk_server.py
 
-on seperate terminal:
+#on seperate terminal:
 
 python kb_client.py 
 
 
 
 
-
+Now you should be able to pair the device with a phone or something else as normal.  Keyboard strokes on the physical keyboard plugged into the rPi will now appear on the paired device.  Keyboard strokes from a ssh connection do appear on the kb_client output but won't be sent to the connected device.  It has to be the keyboard on the rPi.  Hope that makes sense as this tripped me up for half an hour.
 
