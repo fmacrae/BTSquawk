@@ -18,6 +18,14 @@ import numpy as np
 
 kb = 'test holder val'
 
+from collections import deque
+#remember the last 5 commands
+key_memory_list = ["","","","",""]
+dKeyMem = deque(key_memory_list)
+#keep track if its listening
+isListening = True
+
+
 voice_to_keys = {
   "go_forwards": 40,
   "go_backwards": 41,
@@ -28,12 +36,32 @@ voice_to_keys = {
   "move_right": 79,
   "go_right": 79,
   "move_up": 82,
-  "go_up": 82
+  "go_up": 82,
+  "home phrase": 74, # need to train it to have a home phrase
+  "begin_application": 8888,
+  "begin_program": 8888,
+  "begin_task": 8888,
+  "start_application": 8888,
+  "start_game": 8888,
+  "start_program": 8888,
+  "start_task": 8888,
+  "close_application": 9999,
+  "close_program": 9999,
+  "close_task": 9999,
+  "stop_application": 9999,
+  "stop_program": 9999,
+  "stop_task": 9999
 }
 
 def print_results(result, commands, labels, top=3):
   """Example callback function that prints the passed detections."""
+  global isListening #use the global one as we're assigning in this function too.
   top_results = np.argsort(-result)[:top]
+  dKeyMem.pop() #pop(delete) the oldest one
+  dKeyMem.appendleft(labels[top_results[0]]) #add the latest top detection to the list
+  print('adding this to list: ' + labels[top_results[0]])
+  #print(dKeyMem)
+
   for p in range(top):
     l = labels[top_results[p]]
     if l in commands.keys():
@@ -43,17 +71,34 @@ def print_results(result, commands, labels, top=3):
     if top_results[p] and result[top_results[p]] > threshold:
       sys.stdout.write("\033[1m\033[93m*%15s*\033[0m (%.3f)" %
                        (l, result[top_results[p]]))
-      keyvalue = voice_to_keys[l]
-      kb.btk_service.send_keys([161, 1, 0, 0, 0, 0, 0, 0, 0, 0])
-      kb.btk_service.send_keys([161, 1, 0, 0, keyvalue, 0, 0, 0, 0, 0])
-      kb.btk_service.send_keys([161, 1, 0, 0, 0, 0, 0, 0, 0, 0])
-
+      try:
+        keyvalue = voice_to_keys[l]
+      except:
+        print("unrecognized value for the keys we're interested in")
+        keyvalue = 0 # just zero it out if it's not one of the onese we're looking for
+      if l == dKeyMem[1]:
+        print('likely dupe as looks like ' + dKeyMem[1] )
+      else:
+        if keyvalue == 8888: #hacky code magic numbers
+          isListening = True
+          print("Now Listening")
+        if keyvalue == 9999: #TODO fix this
+          isListening = False
+          print("Not Listening!")
+        if keyvalue < 8888:  #TODO fix this
+          if isListening:
+            kb.btk_service.send_keys([161, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+            kb.btk_service.send_keys([161, 1, 0, 0, keyvalue, 0, 0, 0, 0, 0])
+            kb.btk_service.send_keys([161, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+          else:
+            print("not listening")
     elif result[top_results[p]] > 0.005:
       sys.stdout.write(" %15s (%.3f)" % (l, result[top_results[p]]))
   sys.stdout.write("\n")
 
 
 def main():
+  isListening = True
   parser = argparse.ArgumentParser()
   model.add_model_flags(parser)
   args = parser.parse_args()
