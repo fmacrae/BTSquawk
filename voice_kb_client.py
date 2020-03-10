@@ -18,6 +18,19 @@ import numpy as np
 
 kb = 'test holder val'
 
+voice_to_keys = {
+  "go_forwards": 40,
+  "go_backwards": 41,
+  "move_down": 81,
+  "go_down": 81,
+  "go_left": 80,
+  "move_left": 80,
+  "move_right": 79,
+  "go_right": 79,
+  "move_up": 82,
+  "go_up": 82
+}
+
 def print_results(result, commands, labels, top=3):
   """Example callback function that prints the passed detections."""
   top_results = np.argsort(-result)[:top]
@@ -30,13 +43,10 @@ def print_results(result, commands, labels, top=3):
     if top_results[p] and result[top_results[p]] > threshold:
       sys.stdout.write("\033[1m\033[93m*%15s*\033[0m (%.3f)" %
                        (l, result[top_results[p]]))
-      key_str = evdev.ecodes.KEY[82] #up
-      mod_key = keymap.modkey(key_str)
-      if mod_key > -1:
-         kb.update_mod_keys(mod_key, 1)
-      else:
-         kb.update_keys(keymap.convert(key_str), 1)
-      kb.send_keys()
+      keyvalue = voice_to_keys[l]
+      kb.btk_service.send_keys([161, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+      kb.btk_service.send_keys([161, 1, 0, 0, keyvalue, 0, 0, 0, 0, 0])
+      kb.btk_service.send_keys([161, 1, 0, 0, 0, 0, 0, 0, 0, 0])
 
     elif result[top_results[p]] > 0.005:
       sys.stdout.write(" %15s (%.3f)" % (l, result[top_results[p]]))
@@ -124,7 +134,7 @@ class Kbrd:
         return [0xA1, 0x01, self.mod_keys, 0, *self.pressed_keys]
 
     def send_keys(self):
-        print(self.state)
+        print('sending key' + str(len(self.pressed_keys)))
         self.btk_service.send_keys(self.state)
 
     def event_loop(self):
@@ -149,7 +159,7 @@ if __name__ == '__main__':
     print('Setting up keyboard')
     kb = Kbrd()
 
-    print('starting event loop')
-    kb.event_loop()
-    #print('starting coral board to listen')
-    #main()
+    #print('starting event loop')
+    #kb.event_loop()
+    print('starting coral board to listen')
+    main()
