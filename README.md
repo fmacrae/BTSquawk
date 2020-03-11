@@ -79,7 +79,7 @@ sudo python3 btk_server.py
 #on seperate terminal:
 
 python kb_client.py
-``
+```
 
 
 Now you should be able to pair the device with a phone or something else as normal. Keyboard strokes on the physical keyboard plugged into the rPi will now appear on the paired device. Keyboard strokes from a ssh connection do appear on the kb_client output but won't be sent to the connected device. It has to be the keyboard on the rPi. Hope that makes sense as this tripped me up for half an hour.
