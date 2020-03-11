@@ -20,6 +20,7 @@ Install instructions:
 
 Full Buster Raspian install
 
+```
 sudo apt-get update
 
 sudo apt-get upgrade
@@ -31,25 +32,36 @@ sudo apt-get install python3-dbus
 sudo pip3 install evdev
 
 sudo service bluetooth stop
+```
+
 
 modify the /lib/systemd/system/bluetooth.service file. You will need to change the Service line from:
 
+```
 ExecStart=/usr/lib/bluetooth/bluetoothd
+```
 
 to:
 
+```
 ExecStart=/usr/lib/bluetooth/bluetoothd -P input
+```
 
 Change the class of the device to a bluetooth keyboard by modifying main.conf:
 
+```
 sudo vi /etc/bluetooth/main.conf
 
 #add this line in or ammend the Class = to this if it's already there:
 
 Class = 0x002540
+```
+
 
 If you want it to emulate another device check this for codes: http://domoticx.com/bluetooth-class-of-device-lijst-cod/
 
+
+```
 #now copy this file from the repo to to system.d
 
 sudo cp org.yaptb.btkkbservice.conf /etc/dbus-1/system.d
@@ -67,6 +79,8 @@ sudo python3 btk_server.py
 #on seperate terminal:
 
 python kb_client.py
+``
+
 
 Now you should be able to pair the device with a phone or something else as normal. Keyboard strokes on the physical keyboard plugged into the rPi will now appear on the paired device. Keyboard strokes from a ssh connection do appear on the kb_client output but won't be sent to the connected device. It has to be the keyboard on the rPi. Hope that makes sense as this tripped me up for half an hour.
 
@@ -79,11 +93,11 @@ coral TPU needs setup as per the instructions :
 
 
 
-Install TPU:
+# Install TPU:
 
 Follow these steps taken from: https://coral.ai/docs/accelerator/get-started/#set-up-on-linux-or-raspberry-pi
 
-
+```
 echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
 
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
@@ -119,14 +133,14 @@ bash install_requirements.sh
 
 
 pip3 install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_armv7l.whl
+```
 
-
-
+```
 python3 classify_image.py \
 --model models/mobilenet_v2_1.0_224_inat_bird_quant_edgetpu.tflite \
 --labels models/inat_bird_labels.txt \
 --input images/parrot.jpg
-
+```
 
 
 #setup recording and playback devices:
@@ -136,7 +150,7 @@ https://iotbytes.wordpress.com/connect-configure-and-test-usb-microphone-and-spe
 
 
 #you might have to unplug and re plug in
-
+```
 pi@piVoiceKB:~ $ aplay -l
 **** List of PLAYBACK Hardware Devices ****
 card 0: ALSA [bcm2835 ALSA], device 0: bcm2835 ALSA [bcm2835 ALSA]
@@ -166,9 +180,10 @@ cd
 mv .asoundrc asoundrc.old
 
 vi .asoundrc
-
+```
 Fill it with something like this: 
 
+```
 pcm.!default {
   type asym
   capture.pcm "mic"
@@ -186,10 +201,11 @@ pcm.speaker {
     pcm "hw:<card number>,<device number>"
   }
 }
+```
 
 So for me I did:
 
-
+```
 pcm.!default {
   type asym
   capture.pcm "mic"
@@ -210,12 +226,12 @@ pcm.speaker {
 
 
 sudo cp ~/.asoundrc /etc/asound.conf
+```
 
 
 
-
-
-https://github.com/google-coral/project-keyword-spotter
+```
+#  https://github.com/google-coral/project-keyword-spotter
 
 cd
 
@@ -226,15 +242,18 @@ sh install_requirements.sh
 
 
 python3 run_model.py
-
+```
 
 
 If this works then you should be able to jump back to my repo and run:
 
+```
 python3 voice_kb_client.py
+```
 
 and it'll listen for these inputs (and click the key corresponding to the number):
 
+```
   "go_forwards": 40,
   "go_backwards": 41,
   "move_down": 81,
@@ -245,3 +264,27 @@ and it'll listen for these inputs (and click the key corresponding to the number
   "go_right": 79,
   "move_up": 82,
   "go_up": 82
+```
+
+It also listens for these commands to turn off and on the listening for other commands
+
+  Commands to act on commands it hears (default state):
+```
+  "begin_application"
+  "begin_program"
+  "begin_task"
+  "start_application"
+  "start_game"
+  "start_program"
+  "start_task"
+```
+
+  Commands to stop acting on commands till it hears command to start again
+```
+  "close_application"
+  "close_program"
+  "close_task"
+  "stop_application"
+  "stop_program"
+  "stop_task"
+```
