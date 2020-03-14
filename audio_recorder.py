@@ -71,7 +71,7 @@ class AudioRecorder(object):
   frames_per_chunk = 2**9
 
   # Limit queue to this number of audio chunks.
-  max_queue_chunks = 1200
+  max_queue_chunks = 12000
 
   # Timeout if we can't get a chunk from the queue for timeout_factor times the
   # chunk duration.
@@ -149,7 +149,9 @@ class AudioRecorder(object):
     except queue.Full:
       error_message = "Raw audio buffer full."
       logger.critical(error_message)
-      raise TimeoutError(error_message)
+      # raise TimeoutError(error_message) #just ignoring if we run out of space - it'll mean dropping frames but if we drop below realtime then happy to let us catch up.
+      while not self._raw_audio_queue.empty():
+        self._raw_audio_queue.get()
 
   def _get_chunk(self, timeout=None):
     raw_data, timestamp = self._raw_audio_queue.get(timeout=timeout)

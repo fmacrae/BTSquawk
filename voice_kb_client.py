@@ -1,6 +1,25 @@
+#! /usr/bin/env python
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+import logging
+
+import sys
+def setup_custom_logger(name):
+    formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                                  datefmt='%Y-%m-%d %H:%M:%S')
+    handler = logging.FileHandler('voicelog.txt', mode='w')
+    handler.setFormatter(formatter)
+    screen_handler = logging.StreamHandler(stream=sys.stdout)
+    screen_handler.setFormatter(formatter)
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    logger.addHandler(screen_handler)
+    return logger
+
+logger = setup_custom_logger('voiceKB')
 
 
 import dbus
@@ -12,7 +31,6 @@ HID_DBUS = 'org.yaptb.btkbservice'
 HID_SRVC = '/org/yaptb/btkbservice'
 
 import argparse
-import sys
 import model
 import numpy as np
 
@@ -82,16 +100,20 @@ def print_results(result, commands, labels, top=3):
         if keyvalue == 8888: #hacky code magic numbers
           isListening = True
           print("Now Listening")
+          logger.info("Started listening")
         if keyvalue == 9999: #TODO fix this
           isListening = False
           print("Not Listening!")
+          logger.info("Stopped listening")
         if keyvalue < 8888:  #TODO fix this
           if isListening:
+            logger.info("Sending key " + l)
             kb.btk_service.send_keys([161, 1, 0, 0, 0, 0, 0, 0, 0, 0])
             kb.btk_service.send_keys([161, 1, 0, 0, keyvalue, 0, 0, 0, 0, 0])
             kb.btk_service.send_keys([161, 1, 0, 0, 0, 0, 0, 0, 0, 0])
           else:
             print("not listening")
+            logger.info("Would have Sent key " + l)
     elif result[top_results[p]] > 0.005:
       sys.stdout.write(" %15s (%.3f)" % (l, result[top_results[p]]))
   sys.stdout.write("\n")
@@ -99,17 +121,24 @@ def print_results(result, commands, labels, top=3):
 
 def main():
   isListening = True
-  parser = argparse.ArgumentParser()
-  model.add_model_flags(parser)
-  args = parser.parse_args()
-  interpreter = model.make_interpreter(args.model_file)
-  interpreter.allocate_tensors()
-  mic = args.mic if args.mic is None else int(args.mic)
-  model.classify_audio(mic, interpreter,
+  while True:
+    try:
+      parser = argparse.ArgumentParser()
+      model.add_model_flags(parser)
+      args = parser.parse_args()
+      interpreter = model.make_interpreter(args.model_file)
+      interpreter.allocate_tensors()
+      mic = args.mic if args.mic is None else int(args.mic)
+      model.classify_audio(mic, interpreter,
                        labels_file="config/labels_gc2.raw.txt",
                        result_callback=print_results,
                        sample_rate_hz=int(args.sample_rate_hz),
                        num_frames_hop=int(args.num_frames_hop))
+    except:
+      logger.error("crashed and restarting the model: " + sys.exc_info()[0])
+      sys.stdout.write("Crashed so trying to restart")
+      sys.stdout.write("print Unexpected error" + sys.exc_info()[0])
+
 
 class Kbrd:
     """
@@ -127,7 +156,8 @@ class Kbrd:
                                              HID_SRVC)
         self.btk_service = dbus.Interface(self.btkobject,
                                           HID_DBUS)
-        self.wait_for_keyboard()
+        #self.wait_for_keyboard()
+        print("Not linking to physical keyboard so skipping wait_for_keyboard()")
 
     def wait_for_keyboard(self, event_id=0):
         """
@@ -208,3 +238,4 @@ if __name__ == '__main__':
     #kb.event_loop()
     print('starting coral board to listen')
     main()
+
