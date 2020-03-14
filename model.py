@@ -261,29 +261,34 @@ def classify_audio(audio_device_index, interpreter, labels_file,
   with recorder:
     last_detection = -1
     while not timed_out:
-      spectrogram = feature_extractor.get_next_spectrogram(recorder)
-      set_input(interpreter, spectrogram.flatten())
-      interpreter.invoke()
-      result = get_output(interpreter)
-      if result_callback:
-        result_callback(result, commands, labels)
-      if dectection_callback:
-        detection = -1
-        if result[0] < negative_threshold:
-          top3 = np.argsort(-result)[:3]
-          for p in range(3):
-            label = labels[top3[p]]
-            if label not in commands.keys():
-              continue
-            if top3[p] and result[top3[p]] > commands[label]['conf']:
-              if detection < 0:
-                detection = top3[p]
-        if detection < 0 and last_detection > 0:
-          print("---------------")
-          last_detection = 0
-        if labels[detection] in commands.keys() and detection != last_detection:
-          print(labels[detection], commands[labels[detection]])
-          dectection_callback(commands[labels[detection]]['key'])
-          last_detection = detection
-      if spectrogram.mean() < 0.001:
-        print("Warning: Input audio signal is nearly 0. Mic may be off ?")
+      try:
+        spectrogram = feature_extractor.get_next_spectrogram(recorder)
+        set_input(interpreter, spectrogram.flatten())
+        interpreter.invoke()
+        result = get_output(interpreter)
+        if result_callback:
+          result_callback(result, commands, labels)
+        if dectection_callback:
+          detection = -1
+          if result[0] < negative_threshold:
+            top3 = np.argsort(-result)[:3]
+            for p in range(3):
+              label = labels[top3[p]]
+              if label not in commands.keys():
+                continue
+              if top3[p] and result[top3[p]] > commands[label]['conf']:
+                if detection < 0:
+                  detection = top3[p]
+          if detection < 0 and last_detection > 0:
+            print("---------------")
+            last_detection = 0
+          if labels[detection] in commands.keys() and detection != last_detection:
+            print(labels[detection], commands[labels[detection]])
+            dectection_callback(commands[labels[detection]]['key'])
+            last_detection = detection
+        if spectrogram.mean() < 0.001:
+          print("Warning: Input audio signal is nearly 0. Mic may be off ?")
+      except:
+        print("crashing out not sure why")
+        timed_out = True
+        raise
