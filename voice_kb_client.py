@@ -135,9 +135,9 @@ def main():
                        sample_rate_hz=int(args.sample_rate_hz),
                        num_frames_hop=int(args.num_frames_hop))
     except:
-      logger.error("crashed and restarting the model: " + sys.exc_info()[0])
+      logger.error("crashed and restarting the model: " + str(sys.exc_info()[0]))
       sys.stdout.write("Crashed so trying to restart")
-      sys.stdout.write("print Unexpected error" + sys.exc_info()[0])
+      sys.stdout.write("print Unexpected error" + str(sys.exc_info()[0]))
 
 
 class Kbrd:
