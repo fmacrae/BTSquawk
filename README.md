@@ -288,3 +288,11 @@ It also listens for these commands to turn off and on the listening for other co
   "stop_program"
   "stop_task"
 ```
+
+
+
+
+
+If you are using it to control a Fire TV Stick you'll notice it disconnects when it goes into sleep mode.  I'm hopeful this set of instructions might help (still to try it)
+https://kinkeadtech.com/how-to-prevent-fire-tv-stick-from-going-to-sleep/
+
